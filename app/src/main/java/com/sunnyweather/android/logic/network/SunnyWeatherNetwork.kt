@@ -14,7 +14,7 @@ object SunnyWeatherNetwork {
     private val placeService = ServiceCreator.create<PlaceService>()
 
     //定义了一个searchPlaces()函数，并在这里调用刚刚在PlaceService接口中定义的searchPlaces()方法，以发起搜索城市数据请求
-    suspend fun searchPlaces(query: String) = placeService.searchPlaces(query)
+    suspend fun searchPlaces(query: String) = placeService.searchPlaces(query).await()
 
     private suspend fun <T> Call<T>.await(): T {
         return suspendCoroutine { continuation ->
@@ -27,14 +27,10 @@ object SunnyWeatherNetwork {
                         continuation.resumeWithException(RuntimeException("响应的主体为空"))
                     }
                 }
-
                 override fun onFailure(call: Call<T>, t: Throwable) {
                     continuation.resumeWithException(t)
                 }
-
             })
-
         }
     }
-
 }
