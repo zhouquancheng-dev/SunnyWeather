@@ -3,6 +3,7 @@ package com.sunnyweather.android.ui.weather
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -13,6 +14,7 @@ import com.sunnyweather.android.logic.model.Weather
 import com.sunnyweather.android.logic.model.getSky
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.forecast.*
+import kotlinx.android.synthetic.main.life_index.*
 import kotlinx.android.synthetic.main.now.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -72,6 +74,20 @@ class WeatherActivity : AppCompatActivity() {
             val temperatureInfo = view.findViewById(R.id.temperatureInfo) as TextView
             val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             dateInfo.text = simpleDateFormat.format(skycon.date)
+            val sky = getSky(skycon.value)
+            skyIcon.setImageResource(sky.icon)
+            skyInfo.text = sky.info
+            val tempText = "${temperature.min.toInt()} ~ ${temperature.max.toInt()}"
+            temperatureInfo.text = tempText
+            forecastLayout.visibility = View.VISIBLE
+
+            //填充life_index.xml布局中的数据
+            val lifeIndex = daily.lifeIndex
+            coldRiskText.text = lifeIndex.coldRisk[0].desc
+            dressingText.text = lifeIndex.dressing[0].desc
+            ultravioletText.text = lifeIndex.ultraviolet[0].desc
+            carWashingText.text = lifeIndex.carWashing[0].desc
+            weatherLayout.visibility = View.VISIBLE
         }
     }
 }
