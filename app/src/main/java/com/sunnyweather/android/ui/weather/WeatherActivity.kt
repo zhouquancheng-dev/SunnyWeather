@@ -7,12 +7,11 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.sunnyweather.android.R
 import com.sunnyweather.android.logic.model.Weather
 import com.sunnyweather.android.logic.model.getSky
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_weather.*
 import kotlinx.android.synthetic.main.forecast.*
 import kotlinx.android.synthetic.main.life_index.*
 import kotlinx.android.synthetic.main.now.*
@@ -39,7 +38,7 @@ class WeatherActivity : AppCompatActivity() {
             val weather = result.getOrNull()
             if (weather != null) {
                 //显示天气信息
-
+                showWeatherInfo(weather)
             } else {
                 Toast.makeText(this, "无法成功获取天气信息", Toast.LENGTH_SHORT).show()
                 result.exceptionOrNull()?.printStackTrace()
@@ -68,6 +67,7 @@ class WeatherActivity : AppCompatActivity() {
             val skycon = daily.skycon[i]
             val temperature = daily.temperature[i]
             val view = LayoutInflater.from(this).inflate(R.layout.forecast_item, forecastLayout, false)
+
             val dateInfo = view .findViewById(R.id.dateInfo ) as TextView
             val skyIcon = view.findViewById(R.id.skyIcon) as ImageView
             val skyInfo = view.findViewById(R.id.skyInfo) as TextView
@@ -77,9 +77,10 @@ class WeatherActivity : AppCompatActivity() {
             val sky = getSky(skycon.value)
             skyIcon.setImageResource(sky.icon)
             skyInfo.text = sky.info
+
             val tempText = "${temperature.min.toInt()} ~ ${temperature.max.toInt()}"
             temperatureInfo.text = tempText
-            forecastLayout.visibility = View.VISIBLE
+            forecastLayout.addView(view)
 
             //填充life_index.xml布局中的数据
             val lifeIndex = daily.lifeIndex

@@ -12,7 +12,6 @@ object SunnyWeatherNetwork {
 
     //使用ServiceCreator创建了一个PlaceService接口的动态代理对象，然后定义了一个searchPlaces()函数
     private val placeService = ServiceCreator.create<PlaceService>()
-
     //定义了一个searchPlaces()函数，并在这里调用刚刚在PlaceService接口中定义的searchPlaces()方法，以发起搜索城市数据请求
     suspend fun searchPlaces(query: String) = placeService.searchPlaces(query).await()
 
