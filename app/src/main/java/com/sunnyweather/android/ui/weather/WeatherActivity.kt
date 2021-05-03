@@ -1,12 +1,17 @@
 package com.sunnyweather.android.ui.weather
 
+import android.graphics.Color
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
+import android.view.WindowInsets
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
 import com.sunnyweather.android.R
 import com.sunnyweather.android.logic.model.Weather
@@ -18,12 +23,21 @@ import kotlinx.android.synthetic.main.now.*
 import java.text.SimpleDateFormat
 import java.util.*
 
+@Suppress("DEPRECATION")
 class WeatherActivity : AppCompatActivity() {
 
     private val viewModel by lazy { ViewModelProvider(this).get(WeatherViewModel::class.java) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        //实现沉浸式，透明状态栏
+        if (Build.VERSION.SDK_INT >= 21) {
+            val decorView = window.decorView
+            decorView.systemUiVisibility =
+                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            window.statusBarColor = Color.TRANSPARENT
+        }
+
         setContentView(R.layout.activity_weather)
         if (viewModel.locationLng.isEmpty()) {
             viewModel.locationLng = intent.getStringExtra("location_lng") ?: ""
@@ -55,7 +69,6 @@ class WeatherActivity : AppCompatActivity() {
         val currentTempText = "${realtime.temperature.toInt()} ℃"
         currentTemp.text = currentTempText
         currentSky.text = getSky(realtime.skycon).info
-
         val currentPM25Text = "空气指数 ${realtime.airQuality.aqi.chn.toInt()}"
         currentAQI.text = currentPM25Text
         nowLayout.setBackgroundResource(getSky(realtime.skycon).bg)

@@ -24,13 +24,13 @@
             android:textColor="?android:attr/textColorPrimary"
             android:textSize="20sp"/>
 
-    </LinearLayout>
+        <LinearLayout
+            android:id="@+id/forecastLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+        </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/forecastLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>

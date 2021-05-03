@@ -27,6 +27,26 @@ class PlaceFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+
+        /**
+         * 如果当前已有存储的城市数据，那么就获取已存储的数据并解析成Place对象，
+         * 然后使用它的经纬度坐标和城市名直接跳转并传递给WeatherActivity
+         */
+        if (viewModel.isPlaceSaved()) {
+            val place = viewModel.getSavePlace()
+            val intent = Intent(context, WeatherActivity::class.java).apply {
+                putExtra("location_lng", place.location.lng)
+                putExtra("location_lat", place.location.lat)
+                putExtra("place_name", place.name)
+            }
+            startActivity(intent)
+            activity?.finish()
+            return
+        }
+
+        /**
+         * 初始化PlaceAdapter工作
+         */
         val layoutManager = LinearLayoutManager(activity)
         recyclerView.layoutManager = layoutManager
         adapter = PlaceAdapter(viewModel.placeList)
@@ -43,6 +63,9 @@ class PlaceFragment : Fragment() {
             }
         }
 
+        /**
+         * 观察PlaceViewModel
+         */
         viewModel.placeLiveData.observe(viewLifecycleOwner, { result ->
             val places = result.getOrNull()
             if (places != null) {
@@ -57,17 +80,23 @@ class PlaceFragment : Fragment() {
             }
         })
 
+        /**
+         * 调用PlaceAdapter中定义的ItemClick接口来实现跳转页面
+         */
         adapter.setOnItemClickListener(object : PlaceAdapter.OnItemClickListener{
             override fun onItemClick(view: View, position: Int) {
-                val place = viewModel.placeList[position]
-                Log.d("PlaceFragment", "你点击了：${place.name}")
-                val intent = Intent(context, WeatherActivity::class.java).apply {
-                    putExtra("location_lng", place.location.lng)
-                    putExtra("location.lat", place.location.lat)
-                    putExtra("location_name", place.name)
+                if (viewModel.isPlaceSaved()) {
+                    val place = viewModel.placeList[position]
+                    Log.d("PlaceFragment", "你点击了：${place.name}")
+                    val intent = Intent(context, WeatherActivity::class.java).apply {
+                        putExtra("location_lng", place.location.lng)
+                        putExtra("location_lat", place.location.lat)
+                        putExtra("place_name", place.name)
+                    }
+                    viewModel.savePlace(place)
+                    context?.startActivity(intent)
+                    activity?.finish()
                 }
-                context?.startActivity(intent)
-                activity?.finish()
             }
         })
     }
