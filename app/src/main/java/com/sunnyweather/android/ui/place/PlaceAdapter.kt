@@ -8,8 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sunnyweather.android.R
 import com.sunnyweather.android.logic.model.Place
 
-class PlaceAdapter(private val placeList: List<Place>) :
-    RecyclerView.Adapter<PlaceAdapter.ViewHolder>(){
+class PlaceAdapter(private val placeList: List<Place>) : RecyclerView.Adapter<PlaceAdapter.ViewHolder>(){
 
     interface OnItemClickListener {
         fun onItemClick(view: View, position: Int)

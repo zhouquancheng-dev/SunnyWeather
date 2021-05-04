@@ -3,4 +3,5 @@
     <string name="EditPlace">输入地址</string>
     <string name="placeBackground">placeBackground</string>
     <string name="forecastText">预报</string>
+    <string name="分隔">|</string>
 </resources>

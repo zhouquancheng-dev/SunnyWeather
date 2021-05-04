@@ -2,7 +2,6 @@ package com.sunnyweather.android.ui.place
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,13 +10,15 @@ import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.sunnyweather.android.MainActivity
 import com.sunnyweather.android.R
 import com.sunnyweather.android.ui.weather.WeatherActivity
+import kotlinx.android.synthetic.main.activity_weather.*
 import kotlinx.android.synthetic.main.fragment_place.*
 
 class PlaceFragment : Fragment() {
 
-    private val viewModel by lazy { ViewModelProvider(this).get(PlaceViewModel::class.java) }
+    val viewModel by lazy { ViewModelProvider(this).get(PlaceViewModel::class.java) }
 
     private lateinit var adapter: PlaceAdapter
 
@@ -32,7 +33,7 @@ class PlaceFragment : Fragment() {
          * 如果当前已有存储的城市数据，那么就获取已存储的数据并解析成Place对象，
          * 然后使用它的经纬度坐标和城市名直接跳转并传递给WeatherActivity
          */
-        if (viewModel.isPlaceSaved()) {
+        if (activity is MainActivity && viewModel.isPlaceSaved()) {
             val place = viewModel.getSavePlace()
             val intent = Intent(context, WeatherActivity::class.java).apply {
                 putExtra("location_lng", place.location.lng)
@@ -85,18 +86,24 @@ class PlaceFragment : Fragment() {
          */
         adapter.setOnItemClickListener(object : PlaceAdapter.OnItemClickListener{
             override fun onItemClick(view: View, position: Int) {
-                if (viewModel.isPlaceSaved()) {
-                    val place = viewModel.placeList[position]
-                    Log.d("PlaceFragment", "你点击了：${place.name}")
+                val place = viewModel.placeList[position]
+                val activity = activity
+                if (activity is WeatherActivity) {
+                    activity.drawerLayout.closeDrawers()
+                    activity.viewModel.locationLng = place.location.lng
+                    activity.viewModel.locationLat = place.location.lat
+                    activity.viewModel.placeName = place.name
+                    activity.refreshWeather()
+                } else {
                     val intent = Intent(context, WeatherActivity::class.java).apply {
                         putExtra("location_lng", place.location.lng)
                         putExtra("location_lat", place.location.lat)
                         putExtra("place_name", place.name)
                     }
-                    viewModel.savePlace(place)
-                    context?.startActivity(intent)
+                    startActivity(intent)
                     activity?.finish()
                 }
+                viewModel.savePlace(place)
             }
         })
     }
