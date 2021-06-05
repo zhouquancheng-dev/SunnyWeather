@@ -1,6 +1,7 @@
 package com.sunnyweather.android.ui.weather
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -14,18 +15,33 @@ import android.widget.Toast
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.ViewModelProvider
+import com.sunnyweather.android.LogUtil
 import com.sunnyweather.android.R
+import com.sunnyweather.android.SunnyWeatherApplication
+import com.sunnyweather.android.logic.Repository
+import com.sunnyweather.android.logic.model.RealtimeResponse
 import com.sunnyweather.android.logic.model.Weather
 import com.sunnyweather.android.logic.model.getSky
+import com.sunnyweather.android.logic.network.ServiceCreator
+import com.sunnyweather.android.logic.network.WeatherService
+import com.sunnyweather.android.logic.work.MyService
 import kotlinx.android.synthetic.main.activity_weather.*
 import kotlinx.android.synthetic.main.forecast.*
 import kotlinx.android.synthetic.main.life_index.*
 import kotlinx.android.synthetic.main.now.*
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import java.io.BufferedWriter
+import java.io.IOException
+import java.io.OutputStreamWriter
 import java.text.SimpleDateFormat
 import java.util.*
 
 @Suppress("DEPRECATION")
 class WeatherActivity : AppCompatActivity() {
+
+    private fun getSavePlace() = Repository.getSavedPlace()
 
     val viewModel by lazy { ViewModelProvider(this).get(WeatherViewModel::class.java) }
 
@@ -39,6 +55,7 @@ class WeatherActivity : AppCompatActivity() {
             window.statusBarColor = Color.TRANSPARENT
         }
         setContentView(R.layout.activity_weather)
+
         if (viewModel.locationLng.isEmpty()) {
             viewModel.locationLng = intent.getStringExtra("location_lng") ?: ""
         }
@@ -51,8 +68,8 @@ class WeatherActivity : AppCompatActivity() {
         viewModel.weatherLiveData.observe(this, { result ->
             val weather = result.getOrNull()
             if (weather != null) {
-                //显示天气信息
-                showWeatherInfo(weather)
+                showWeatherInfo(weather)  //显示天气信息
+                request()
             } else {
                 Toast.makeText(this, "无法成功获取天气信息", Toast.LENGTH_SHORT).show()
                 result.exceptionOrNull()?.printStackTrace()
@@ -63,6 +80,8 @@ class WeatherActivity : AppCompatActivity() {
         refreshWeather()
         swipeRefresh.setOnRefreshListener {
             refreshWeather()
+            val intent1 = Intent(this, MyService::class.java)
+            startService(intent1)
         }
 
         //让搜索地点页面从左边显示
@@ -85,7 +104,17 @@ class WeatherActivity : AppCompatActivity() {
             }
 
         })
+    }
 
+    override fun onStop() {
+        super.onStop()
+        finish()
+        LogUtil.v("WeatherActivity", "onStop")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        LogUtil.v("WeatherActivity", "onDestroy")
     }
 
     fun refreshWeather() {
@@ -98,9 +127,10 @@ class WeatherActivity : AppCompatActivity() {
         val realtime = weather.realtime
         val daily = weather.daily
         //填充now.xml中的数据
-        val currentTempText = "${realtime.temperature.toInt()} ℃"
-        currentTemp.text = currentTempText
-        currentSky.text = getSky(realtime.skycon).info
+        val currentTempText = "${realtime.temperature.toInt()}℃"
+        currentTemp.text = currentTempText  //气温
+        currentSky.text = getSky(realtime.skycon).info  //天气描述，晴，阴，多云……
+
         val currentPM25Text = "空气指数 ${realtime.airQuality.aqi.chn.toInt()}"
         currentAQI.text = currentPM25Text
         nowLayout.setBackgroundResource(getSky(realtime.skycon).bg)
@@ -136,4 +166,70 @@ class WeatherActivity : AppCompatActivity() {
             weatherLayout.visibility = View.VISIBLE
         }
     }
+
+    private fun request() {
+        val weatherService = ServiceCreator.create<WeatherService>()
+        weatherService.getRealtimeWeather(getSavePlace().location.lng, getSavePlace().location.lat)
+            .enqueue(object : Callback<RealtimeResponse> {
+                override fun onResponse(
+                    call: Call<RealtimeResponse>,
+                    response: Response<RealtimeResponse>
+                ) {
+                    val body = response.body()
+                    if (body != null) {
+                        val temp = body.result.realtime.temperature.toInt()
+                        val sky = getSky(body.result.realtime.skycon).info
+                        val skyBg = body.result.realtime.skycon
+                        saveTemp(temp.toString())
+                        saveSky(sky)
+                        saveSkyIc(skyBg)
+                    }
+                }
+
+                override fun onFailure(call: Call<RealtimeResponse>, t: Throwable) {
+                    t.printStackTrace()
+                }
+
+            })
+    }
+
+    private fun saveTemp(body: String) {
+        try {
+            val output = SunnyWeatherApplication.context
+                .openFileOutput("data_temp", Context.MODE_PRIVATE)
+            val writer = BufferedWriter(OutputStreamWriter(output))
+            writer.use {
+                it.write(body)
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun saveSky(body: String) {
+        try {
+            val output = SunnyWeatherApplication.context
+                .openFileOutput("data_sky", Context.MODE_PRIVATE)
+            val writer = BufferedWriter(OutputStreamWriter(output))
+            writer.use {
+                it.write(body)
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun saveSkyIc(body: String) {
+        try {
+            val output = SunnyWeatherApplication.context
+                .openFileOutput("data_skyIc", Context.MODE_PRIVATE)
+            val writer = BufferedWriter(OutputStreamWriter(output))
+            writer.use {
+                it.write(body)
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+    }
+
 }

@@ -12,17 +12,21 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.sunnyweather.android.MainActivity
 import com.sunnyweather.android.R
+import com.sunnyweather.android.databinding.FragmentPlaceBinding
+import com.sunnyweather.android.logic.work.MyService
 import com.sunnyweather.android.ui.weather.WeatherActivity
 import kotlinx.android.synthetic.main.activity_weather.*
 import kotlinx.android.synthetic.main.fragment_place.*
 
 class PlaceFragment : Fragment() {
+    lateinit var binding: FragmentPlaceBinding
 
     val viewModel by lazy { ViewModelProvider(this).get(PlaceViewModel::class.java) }
 
     private lateinit var adapter: PlaceAdapter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        binding = FragmentPlaceBinding.inflate(inflater, container, false)
         return inflater.inflate(R.layout.fragment_place, container, false)
     }
 
@@ -104,6 +108,9 @@ class PlaceFragment : Fragment() {
                     activity?.finish()
                 }
                 viewModel.savePlace(place)
+                //每当选择一个地点之后开启服务
+                val intent1 = Intent(context, MyService::class.java)
+                context?.startService(intent1)
             }
         })
     }

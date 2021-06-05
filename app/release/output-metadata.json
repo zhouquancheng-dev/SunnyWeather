@@ -5,7 +5,7 @@
     "kind": "Directory"
   },
   "applicationId": "com.sunnyweather.android",
-  "variantName": "processReleaseResources",
+  "variantName": "release",
   "elements": [
     {
       "type": "SINGLE",
